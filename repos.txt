@@ -5,6 +5,7 @@ docs
 doc-framework
 go-cli-template
 irissync
+m-cli
 m-parse
 vista-iris
 workspace
