@@ -1,0 +1,9 @@
+# vista-cloud-dev org — clone-all manifest.
+# One repo per line; blank lines and '#' comments are ignored.
+# Branch overrides (for repos not worked on from main) live in bootstrap.sh.
+docs
+doc-framework
+go-cli-template
+irissync
+vista-iris
+workspace
