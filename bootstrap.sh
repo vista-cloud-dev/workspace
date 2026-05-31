@@ -18,6 +18,8 @@ REQUIRED_GO="go1.26.3"
 # Repos worked on from a branch other than the default. name -> branch.
 declare -A BRANCH_OVERRIDES=(
   [vista-iris]="feat/container-build-scaffold"
+  [m-stdlib]="iris-native-backends"
+  [kids-vc]="kids-vc-go-port"
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

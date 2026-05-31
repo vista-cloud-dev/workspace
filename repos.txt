@@ -5,7 +5,11 @@ docs
 doc-framework
 go-cli-template
 irissync
+kids-vc
 m-cli
+m-dev-tools-mcp
 m-parse
+m-stdlib
+vista-info-hub
 vista-iris
 workspace
