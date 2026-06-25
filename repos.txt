@@ -8,7 +8,6 @@ workspace
 docs
 doc-framework
 go-cli-template
-v-tool-template
 
 # --- m-* : engine-neutral M toolchain (runs on a bare M engine, no VistA) ---
 m-cli

@@ -30,7 +30,6 @@ The full set, grouped by the org m/v scope split (see `CLAUDE.md`). Mirrors
 | [docs](https://github.com/vista-cloud-dev/docs) | Design/strategy corpus — dependency maps, toolchain plans, background. |
 | [doc-framework](https://github.com/vista-cloud-dev/doc-framework) | Portable scaffold + validator standard behind the docs corpus. |
 | [go-cli-template](https://github.com/vista-cloud-dev/go-cli-template) | Shared Go CLI scaffold. |
-| [v-tool-template](https://github.com/vista-cloud-dev/v-tool-template) | Scaffold for `v` (VistA) CLI tools. |
 
 ### `m-*` — engine-neutral M toolchain (runs on a bare M engine, no VistA)
 | Repo | What it is |
