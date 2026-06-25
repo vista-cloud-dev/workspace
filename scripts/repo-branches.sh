@@ -4,6 +4,8 @@
 # Keep entries in sync with reality; an empty map means "everything on default".
 # shellcheck disable=SC2034
 declare -A BRANCH_OVERRIDES=(
-  [vista-iris]="feat/container-build-scaffold"
-  [m-stdlib]="iris-native-backends"
+  # (empty) — all repos currently track their default branch.
+  # Past entries retired once their feature work merged & the branch was deleted:
+  #   vista-iris=feat/container-build-scaffold  (merged PR #2)
+  #   m-stdlib=iris-native-backends             (IRIS backend work landed on master)
 )
