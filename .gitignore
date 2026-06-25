@@ -1,0 +1,3 @@
+# m-cli local build/verify caches — machine-local, never committed
+.m-cache/
+.m-cache-verify/
