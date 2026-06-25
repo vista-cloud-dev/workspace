@@ -35,6 +35,12 @@ pulls or resets an existing clone.
 - `bootstrap.sh` — new-machine setup; reads `repos.txt`.
 - `git-update-repos` — fast-forward every repo in a directory; skips anything
   dirty, detached, or without an upstream.
+- [`engine-lab-safety-guide.md`](engine-lab-safety-guide.md) — **read before
+  launching VistA / M engines.** Resource costs, host hardening (memory caps,
+  swap, OOM killer), and the safety tools below — written up after running too
+  many engines hard-froze a host.
+- `scripts/vista-precheck` — go/no-go capacity check **before** launching engines.
+- `scripts/vista-mon` — live dashboard (mem-vs-cap, host, VM) **while** running.
 
 ## Multi-machine discipline
 
