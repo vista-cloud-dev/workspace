@@ -65,8 +65,13 @@ The full set, grouped by the org m/v scope split (see `CLAUDE.md`). Mirrors
 
 - `repos.txt` — clone-all manifest (single source of truth for what's in the org).
 - `bootstrap.sh` — new-machine setup; reads `repos.txt`.
-- `git-update-repos` — fast-forward every repo in a directory; skips anything
-  dirty, detached, or without an upstream.
+- `scripts/git-update-all-repos` — health-check **and** freshen every repo in
+  `repos.txt`: flags staleness (ahead/behind/diverged), correctness (wrong
+  origin/branch), dirt (uncommitted), and cruft (untracked files, stashes,
+  gone-upstream branches), then fast-forwards clean repos that are behind. Never
+  discards local work. Run from anywhere; `VCD_DIR=/path` to point elsewhere.
+- `scripts/repo-branches.sh` — shared `BRANCH_OVERRIDES` map (repos worked on
+  off their default branch); sourced by both `bootstrap.sh` and the updater.
 - [`engine-lab-safety-guide.md`](engine-lab-safety-guide.md) — **read before
   launching VistA / M engines.** Resource costs, host hardening (memory caps,
   swap, OOM killer), and the safety tools below — written up after running too
@@ -78,8 +83,10 @@ The full set, grouped by the org m/v scope split (see `CLAUDE.md`). Mirrors
 
 Development happens on more than one box (e.g. an arm64 Mac and an amd64 Linux
 machine). To avoid drift: **commit + push before leaving a machine, and run
-`./git-update-repos` from the org dir on arrival.** Watch that both machines are
-on the same branch — `vista-iris` lives on a feature branch, not `main`.
+`workspace/scripts/git-update-all-repos` on arrival** — it health-checks every
+repo in `repos.txt` and fast-forwards the clean ones. Watch that both machines
+are on the same branch — `vista-iris` and `m-stdlib` live on feature branches,
+not `main` (see `scripts/repo-branches.sh`).
 
 ## Arch note (arm64 ↔ amd64)
 

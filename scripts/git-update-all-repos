@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#
+# git-update-all-repos — health-check + freshen every repo in repos.txt.
+#
+# Source of truth is the workspace manifest (../repos.txt). For each listed repo
+# it checks:
+#   presence     — is it cloned? is it actually a git repo?
+#   correctness  — does origin point at this org/repo? on the expected branch?
+#   dirt         — uncommitted (tracked) changes
+#   cruft        — untracked files, stash entries, branches whose upstream is gone
+#   staleness    — ahead/behind/diverged vs upstream
+# ...then fast-forwards clean repos that are behind, to bring them current.
+#
+# SAFETY: it never discards local work. Dirty, diverged, or detached repos are
+# reported and left untouched — no reset, no force, no stash-drop. The only
+# mutations are `git fetch --prune` (drops stale remote-tracking refs) and a
+# `--ff-only` advance of clean branches that are strictly behind.
+#
+# Run from anywhere; it locates the org dir from its own path (override VCD_DIR).
+# Exit non-zero if any repo needs attention or is missing (CI-friendly).
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
+MANIFEST="$WORKSPACE_DIR/repos.txt"
+VCD_DIR="${VCD_DIR:-$(dirname "$WORKSPACE_DIR")}"
+ORG="vista-cloud-dev"
+
+# Shared branch-override map (single source of truth with bootstrap.sh).
+# shellcheck source=scripts/repo-branches.sh
+source "$SCRIPT_DIR/repo-branches.sh"
+
+if [[ -t 1 ]]; then
+  BOLD=$'\033[1m'; RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; CYAN=$'\033[36m'; RESET=$'\033[0m'
+else
+  BOLD=''; RED=''; GREEN=''; YELLOW=''; CYAN=''; RESET=''
+fi
+ok()   { printf '   %s\xe2\x9c\x93 %s%s\n' "$GREEN"  "$*" "$RESET"; }
+warn() { printf '   %s! %s%s\n'           "$YELLOW" "$*" "$RESET"; }
+err()  { printf '   %s\xe2\x9c\x97 %s%s\n' "$RED"    "$*" "$RESET"; }
+note() { printf '   %s\xc2\xb7 %s%s\n'     "$CYAN"   "$*" "$RESET"; }
+
+[[ -f "$MANIFEST" ]] || { printf 'manifest not found: %s\n' "$MANIFEST" >&2; exit 1; }
+cd "$VCD_DIR" || { printf 'cannot cd to %s\n' "$VCD_DIR" >&2; exit 1; }
+
+printf '%s==> Health-checking %s repos in %s (manifest: repos.txt)%s\n\n' \
+  "$BOLD" "$ORG" "$VCD_DIR" "$RESET"
+
+total=0 clean=0 updated=0 attention=0 missing=0
+
+while IFS= read -r line; do
+  repo="${line%%#*}"; repo="$(echo "$repo" | tr -d '[:space:]')"
+  [[ -z "$repo" ]] && continue
+  ((total++)) || true
+  printf '%s%s%s\n' "$BOLD" "$repo" "$RESET"
+
+  # --- presence ---
+  if [[ ! -e "$repo" ]]; then
+    err "missing — run workspace/bootstrap.sh to clone"; ((missing++)) || true; continue
+  fi
+  if ! git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    err "exists but is not a git repo — inspect manually"; ((attention++)) || true; continue
+  fi
+
+  issue=0
+
+  # --- correctness: origin points at this org/repo (catches stale renames) ---
+  origin="$(git -C "$repo" remote get-url origin 2>/dev/null || true)"
+  if [[ -z "$origin" ]]; then
+    warn "no 'origin' remote"; issue=1
+  else
+    oname="${origin##*/}"; oname="${oname%.git}"
+    oorg="$(basename "$(dirname "$origin")")"
+    [[ "$oorg"  == "$ORG"  ]] || { warn "origin org is '$oorg' (expected '$ORG'): $origin"; issue=1; }
+    [[ "$oname" == "$repo" ]] || { warn "origin name '$oname' != '$repo' — stale rename? run: git -C $repo remote set-url origin https://github.com/$ORG/$repo"; issue=1; }
+  fi
+
+  # --- fetch + prune stale remote-tracking refs (cruft) ---
+  git -C "$repo" fetch --quiet --prune 2>/dev/null || warn "fetch failed (offline?)"
+
+  # --- branch correctness ---
+  branch="$(git -C "$repo" symbolic-ref --short -q HEAD || true)"
+  default_branch="$(git -C "$repo" symbolic-ref --short -q refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@')"
+  expected="${BRANCH_OVERRIDES[$repo]:-${default_branch:-main}}"
+  if [[ -z "$branch" ]]; then
+    warn "detached HEAD"; issue=1
+  elif [[ "$branch" != "$expected" ]]; then
+    note "on '$branch' (expected '$expected')"
+  fi
+
+  # --- dirt (tracked) + cruft (untracked / stashes / gone-upstream branches) ---
+  tracked_dirty="$(git -C "$repo" status --porcelain --untracked-files=no)"
+  untracked="$(git -C "$repo" ls-files --others --exclude-standard)"
+  [[ -n "$tracked_dirty" ]] && { warn "dirty: $(grep -c . <<<"$tracked_dirty") uncommitted change(s)"; issue=1; }
+  [[ -n "$untracked" ]] && note "cruft: $(grep -c . <<<"$untracked") untracked file(s) (not gitignored)"
+  stashes="$(git -C "$repo" stash list 2>/dev/null | grep -c . || true)"
+  [[ "${stashes:-0}" -gt 0 ]] && note "cruft: $stashes stash entr(y/ies) — review: git -C $repo stash list"
+  gone="$(git -C "$repo" branch -vv 2>/dev/null | grep -c ': gone]' || true)"
+  [[ "${gone:-0}" -gt 0 ]] && note "cruft: $gone local branch(es) whose upstream is gone — prune with: git -C $repo branch -d <name>"
+
+  # --- staleness vs upstream; fast-forward when safe ---
+  if [[ -n "$branch" ]] && git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' >/dev/null 2>&1; then
+    read -r behind ahead < <(git -C "$repo" rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null || echo '0 0')
+    if [[ "$behind" -gt 0 && "$ahead" -gt 0 ]]; then
+      warn "diverged: $behind behind, $ahead ahead — manual merge/rebase"; issue=1
+    elif [[ "$ahead" -gt 0 ]]; then
+      note "$ahead unpushed commit(s) — push when ready"
+    elif [[ "$behind" -gt 0 ]]; then
+      if [[ -z "$tracked_dirty" ]] && git -C "$repo" merge --ff-only --quiet '@{upstream}' 2>/dev/null; then
+        ok "fast-forwarded $behind commit(s) ($branch)"; ((updated++)) || true; continue
+      else
+        warn "$behind behind but cannot fast-forward (dirty?) — not pulling"; issue=1
+      fi
+    fi
+  elif [[ -n "$branch" ]]; then
+    note "no upstream for '$branch' — not tracked"
+  fi
+
+  # --- verdict ---
+  if [[ "$issue" -eq 1 ]]; then
+    ((attention++)) || true
+  else
+    ok "clean & current"; ((clean++)) || true
+  fi
+done < "$MANIFEST"
+
+printf '\n%sSummary%s  %d repos:  %s%d clean%s · %s%d ff-updated%s · %s%d need attention%s · %s%d missing%s\n' \
+  "$BOLD" "$RESET" "$total" \
+  "$GREEN" "$clean" "$RESET" "$GREEN" "$updated" "$RESET" \
+  "$YELLOW" "$attention" "$RESET" "$RED" "$missing" "$RESET"
+
+[[ "$attention" -eq 0 && "$missing" -eq 0 ]]

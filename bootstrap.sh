@@ -15,16 +15,15 @@ set -euo pipefail
 ORG="vista-cloud-dev"
 REQUIRED_GO="go1.26.3"
 
-# Repos worked on from a branch other than the default. name -> branch.
-declare -A BRANCH_OVERRIDES=(
-  [vista-iris]="feat/container-build-scaffold"
-  [m-stdlib]="iris-native-backends"
-)
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST="$SCRIPT_DIR/repos.txt"
 # Default: clone alongside this repo (workspace sits inside the org dir).
 VCD_DIR="${VCD_DIR:-$(dirname "$SCRIPT_DIR")}"
+
+# Repos worked on from a branch other than the default (name -> branch).
+# Single source of truth, shared with scripts/git-update-all-repos.
+# shellcheck source=scripts/repo-branches.sh
+source "$SCRIPT_DIR/scripts/repo-branches.sh"
 
 if [[ -t 1 ]]; then
   BOLD=$'\033[1m'; RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
