@@ -25,7 +25,7 @@ pulls or resets an existing clone.
 | [docs](https://github.com/vista-cloud-dev/docs) | Design/strategy corpus — dependency maps, toolchain plans, background. |
 | [doc-framework](https://github.com/vista-cloud-dev/doc-framework) | Portable scaffold + validator standard behind the docs corpus. |
 | [go-cli-template](https://github.com/vista-cloud-dev/go-cli-template) | Shared Go CLI scaffold. |
-| [irissync](https://github.com/vista-cloud-dev/irissync) | IRIS source-sync binary — sole owner of the IRIS source boundary. |
+| [m-iris](https://github.com/vista-cloud-dev/m-iris) | IRIS engine driver + source-sync (formerly `irissync`) — owns the IRIS source boundary. |
 | [vista-iris](https://github.com/vista-cloud-dev/vista-iris) | IRIS container build (VistA-on-IRIS). Active work on `feat/container-build-scaffold`. |
 | workspace | This repo. |
 

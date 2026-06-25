@@ -1,15 +1,34 @@
 # vista-cloud-dev org — clone-all manifest.
 # One repo per line; blank lines and '#' comments are ignored.
 # Branch overrides (for repos not worked on from main) live in bootstrap.sh.
+# Grouped by the org m/v scope split (see CLAUDE.md); order is not significant.
+
+# --- coordination / docs / templates ---
+workspace
 docs
 doc-framework
 go-cli-template
-irissync
-kids-vc
+v-tool-template
+
+# --- m-* : engine-neutral M toolchain (runs on a bare M engine, no VistA) ---
 m-cli
-m-dev-tools-mcp
-m-parse
 m-stdlib
-vista-info-hub
+m-parse
+m-driver-sdk
+m-ydb
+m-iris
+m-dev-tools-mcp
+
+# --- v-* : VistA-specific (needs Kernel/FileMan/KIDS) ---
+v-stdlib
+v-pkg
+v-cli
+v-web
+vpng
 vista-iris
-workspace
+vista-info-hub
+
+# --- vdocs (PRIVATE — clone needs org access) ---
+vdocs-cli
+vdocs-tui
+vdocs-web

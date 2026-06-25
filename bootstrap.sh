@@ -19,7 +19,6 @@ REQUIRED_GO="go1.26.3"
 declare -A BRANCH_OVERRIDES=(
   [vista-iris]="feat/container-build-scaffold"
   [m-stdlib]="iris-native-backends"
-  [kids-vc]="kids-vc-go-port"
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -95,9 +94,9 @@ ${BOLD}Done.${RESET} Repos are in ${VCD_DIR}. Manual next steps:
 
   ${BOLD}2. Build the Go tools:${RESET}
        (cd ${VCD_DIR}/go-cli-template && make)
-       (cd ${VCD_DIR}/irissync && make)
+       (cd ${VCD_DIR}/m-iris && make)
 
-  ${BOLD}3. Validate irissync <-> vista-iris:${RESET}
+  ${BOLD}3. Validate m-iris <-> vista-iris:${RESET}
        bring up the vista-iris container + Atelier on :52773
        (namespace VISTA, _SYSTEM/SYS — unexpire the password first).
 
