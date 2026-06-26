@@ -3,11 +3,12 @@
 # Branch overrides (for repos not worked on from main) live in bootstrap.sh.
 # Grouped by the org m/v scope split (see CLAUDE.md); order is not significant.
 
-# --- coordination / docs / templates ---
+# --- coordination / docs / templates / shared libs ---
 workspace
 docs
 doc-framework
 go-cli-template
+clikit
 
 # --- m-* : engine-neutral M toolchain (runs on a bare M engine, no VistA) ---
 m-cli
@@ -25,9 +26,3 @@ v-cli
 v-web
 vpng
 vista-iris
-vista-info-hub
-
-# --- vdocs (PRIVATE — clone needs org access) ---
-vdocs-cli
-vdocs-tui
-vdocs-web
