@@ -81,6 +81,28 @@ if command -v docker >/dev/null; then ok "docker present"
 elif command -v podman >/dev/null; then ok "podman present (confirm vista-iris compose targets it)"
 else warn "no container runtime (docker/podman) found — needed for the IRIS image"; fi
 
+# --- Go workspace (go.work) --------------------------------------------------
+# A single go.work at the org root makes cross-module edits resolve against the
+# local working tree instead of pinned tags — no tag/bump/repin churn in the dev
+# loop (see docs: background/go-work-dev-loop-adr.md). It is local-only and
+# uncommitted (the org root is not a repo); regenerate it here, idempotently.
+say "Go workspace (go.work)"
+if command -v go >/dev/null; then
+  cd "$VCD_DIR"
+  [[ -f go.work ]] || go work init
+  added=0
+  for d in */; do
+    [[ -f "${d}go.mod" ]] || continue
+    go work use "./${d%/}" && added=$((added+1))
+  done
+  ok "go.work uses $added local module(s)"
+  warn "one-time, ONLINE: run 'go build ./...' in a couple of modules with the real"
+  warn "GOPROXY to fill the combined-graph module cache; then airgapped builds work."
+  warn "Under go.work do NOT set GOFLAGS=-mod=mod (workspace mode is readonly)."
+else
+  warn "Go not installed — skipping go.work (cross-repo dev will fall back to tags)"
+fi
+
 # --- next steps --------------------------------------------------------------
 cat <<EOF
 

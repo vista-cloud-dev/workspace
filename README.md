@@ -15,8 +15,27 @@ cd workspace
 ```
 
 `bootstrap.sh` is idempotent and non-destructive — it clones what's missing,
-checks out the right branch per repo, runs read-only toolchain checks, and never
-pulls or resets an existing clone.
+checks out the right branch per repo, runs read-only toolchain checks, generates
+the Go workspace (below), and never pulls or resets an existing clone.
+
+## Go workspace (`go.work`) — the cross-repo dev loop
+
+`bootstrap.sh` writes a `go.work` at the org root listing every local Go module.
+With it, a cross-module edit (e.g. `clikit` + `m-cli`) resolves against the
+**local working tree**, not pinned tags — so there is **no tag → `go get` → repin
+churn** in the inner loop. Tags become a *release-time* concern only (see
+[`docs`: `background/go-work-dev-loop-adr.md`](https://github.com/vista-cloud-dev/docs/blob/main/background/go-work-dev-loop-adr.md)).
+
+- `go.work` is **local-only and uncommitted** (the org root is not a repo). CI
+  builds each module standalone against its real pins, so the published contract
+  is still enforced — `go.work` only frees the dev loop.
+- **One-time, online:** after first bootstrap, run `go build ./...` in a couple of
+  modules with the real `GOPROXY` to fill the *combined-graph* module cache; then
+  airgapped builds work. (Workspace mode resolves the union of all members'
+  dependency graphs, which can reference `.mod` files no single module needed.)
+- **Gotcha:** under `go.work` do **not** set `GOFLAGS=-mod=mod` — workspace mode is
+  readonly; `-mod=mod` errors. To build a single module against its *real pins*
+  (ignoring the workspace), use `GOWORK=off`.
 
 ## Repos
 
