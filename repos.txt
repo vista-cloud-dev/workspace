@@ -24,5 +24,7 @@ v-stdlib
 v-pkg
 v-cli
 v-web
-vpng
 vista-iris
+
+# Retired (deleted from GitHub 2026-06-28 once M1 landed; local clone retains history):
+#   vpng — VSL/MSL M1 walking-skeleton (throwaway by design).

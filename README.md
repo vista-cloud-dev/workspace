@@ -49,7 +49,6 @@ The full set, grouped by the org m/v scope split (see `CLAUDE.md`). Mirrors
 | [v-pkg](https://github.com/vista-cloud-dev/v-pkg) | VistA KIDS version control (formerly `kids-vc` / `m-kids`). |
 | [v-cli](https://github.com/vista-cloud-dev/v-cli) | The `v` CLI — single front-end for the VistA developer tools (`v pkg`/`db`/`config`/`rpc`/…). |
 | [v-web](https://github.com/vista-cloud-dev/v-web) | VistA Web Services (`VWEB*`): inbound socket adapter driving the m-stdlib STDHTTPD framework. |
-| [vpng](https://github.com/vista-cloud-dev/vpng) | `VPNG` ("vista-ping") — throwaway VSL/MSL walking skeleton; a VistA config-echo consumer. |
 | [vista-iris](https://github.com/vista-cloud-dev/vista-iris) | IRIS container build (VistA-on-IRIS). Active work on `feat/container-build-scaffold`. |
 | [vista-info-hub](https://github.com/vista-cloud-dev/vista-info-hub) | VistA code + documentation intelligence — one static binary, many faces. |
 
